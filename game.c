@@ -174,10 +174,9 @@ void play_game() {
             // Clear these debug messages after a moment
             refresh();
             napms(2000);
-            mvprintw(10, 3, "%-50s", "");  // Clear debug lines
-            mvprintw(11, 3, "%-50s", "");
-            mvprintw(12, 3, "%-50s", "");
-            mvprintw(13, 3, "%-50s", "");
+            for(int r=10; r<=13; r++) {
+                mvprintw(r, 0, "%-*s", COLS, ""); // Clear the line with spaces
+            }
             refresh();
             refresh();
             napms(2000);  // Show debug info for 2 seconds
