@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE 700
+#define _XOPEN_SOURCE 700// for strdup() chatgpt directive to enable strdup on C17 to get rid of warning
 
 #include <stdio.h>
 #include <stdlib.h>

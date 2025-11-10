@@ -14,7 +14,7 @@
  * 
  * Until then, pressing 'p' to play will show an error message.
  */
-#define _XOPEN_SOURCE 700// for strdup() 
+#define _XOPEN_SOURCE 700// for strdup() chatgpt directive to enable strdup on C17 to get rid of warning
 #include <ctype.h>// for tolower()
 #include <stdio.h>
 #include <stdlib.h>
