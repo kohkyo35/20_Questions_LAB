@@ -118,6 +118,8 @@ void play_game() {
             // Get input and make copies since get_input uses a static buffer
             char *newAnimal = strdup(get_input(6, 3, "I give up! What animal were you thinking of? "));
             char *newQuestion = strdup(get_input(7, 3, "Please provide a question that distinguishes your animal: "));
+            //char *newAnimal = get_input(6, 3, "I give up! What animal were you thinking of? ");
+            //char *newQuestion = get_input(7, 3, "Please provide a question that distinguishes your animal: ");
             int newAnswer = get_yes_no(8, 3, "For your animal, what is the answer to that question? (y/n): ");
             
             // Create nodes with the actual question and animal

@@ -114,7 +114,7 @@ void fs_init(FrameStack *s) {
     if(!s->frames){
         fprintf(stderr, "Memory allocation failed in fs_init\n");
         s->capacity = s->size = 0;
-        return 0; //failure 
+        return; //failure 
     }
 }
 /*fs_init
