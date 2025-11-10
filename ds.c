@@ -1,10 +1,11 @@
+#define _XOPEN_SOURCE 700
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>    // for strcasecmp (used in utils.c sometimes)
 #include <ctype.h>
 #include "lab5.h"
-
-/* ========== Node Functions ========== */
 
 /* TODO 1: Implement create_question_node
  * - Allocate memory fo#include <stdio.h>
@@ -12,8 +13,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "lab5.h"
-
-/* ========== Node Functions ========== */
+*/
 
 /* TODO 1: Implement create_question_node
  * - Allocate memory for a Node structure

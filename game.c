@@ -1,8 +1,12 @@
+#define _XOPEN_SOURCE 700
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ncurses.h>
+#include <unistd.h>     // for sync(), unlink()
+#include <ncurses.h>    // for mvprintw, wgetch, etc.
 #include "lab5.h"
+
 
 extern Node *g_root;
 extern EditStack g_undo;
@@ -69,6 +73,7 @@ void play_game() {
     int parentAnswer = -1; //-1=root, 1=yes, 0=no
     int guessed = 0;
     char status_msg[256]=""; //buffer for status messages because it breaks in the termianl for some reason
+    (void)status_msg; //suppress unused variable warning for now
     while(!fs_empty(&stack) && !guessed){
         Frame f = fs_pop(&stack);
         Node *cur = f.node;

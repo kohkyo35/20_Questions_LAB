@@ -14,12 +14,13 @@
  * 
  * Until then, pressing 'p' to play will show an error message.
  */
-
+#define _XOPEN_SOURCE 700// for strdup() 
+#include <ctype.h>// for tolower()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <ncurses.h>
+#include <unistd.h>     // for sync(), unlink()
+#include <ncurses.h>    // for mvprintw, wrefresh, etc.
 #include "lab5.h"
 
 /* Global root node */
@@ -179,9 +180,11 @@ int main() {
             case 'p':
                 if (g_root == NULL) {
                     show_message("Error: Tree not initialized! Implement TODOs 1-2 first.", 1);
+                    break;
                 } else {
                     play_game();
                 }
+                /* fall through */
             case 'v':
                 draw_tree();
                 break;

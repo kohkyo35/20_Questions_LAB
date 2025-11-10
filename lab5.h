@@ -2,7 +2,6 @@
 #define LAB5_H
 
 #include <stdint.h>
-
 /* ========== Tree Node ========== */
 typedef struct Node {
     char *text;
@@ -133,5 +132,6 @@ void play_game();
 
 /* ========== Visualization ========== */
 void draw_tree();
+void show_message(const char *msg, int is_error);
 
 #endif
