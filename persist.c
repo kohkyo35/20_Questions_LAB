@@ -12,8 +12,10 @@ extern Node *g_root;
 typedef struct {
     Node *node;
     int id;
-} NodeMapping;
+} NodeMapping;//temporarily stores node to ID mappings during save/load
 
+//serailize the tree to a binary file using BFS to assign IDs and write nodes
+//ensures consistent structure for later loading, child relationships via IDs
 int save_tree(const char *filename) {
     /* TODO 27: Implement save_tree
  * Save the tree to a binary file using BFS traversal
@@ -61,44 +63,44 @@ int save_tree(const char *filename) {
     
     // Step 3: Initialize queue and mapping
     Queue q;
-    q_init(&q);
-    NodeMapping *mappings = NULL;
+    q_init(&q);// Initialize queue
+    NodeMapping *mappings = NULL;// Dynamic array for node-ID mappings
     int mapping_capacity = 16;
     int mapping_size = 0;
-    mappings = (NodeMapping*)malloc(mapping_capacity * sizeof(NodeMapping));
+    mappings = (NodeMapping*)malloc(mapping_capacity * sizeof(NodeMapping));// Allocate initial mapping array
     if(mappings == NULL) {
         fclose(file);
         return 0; // Memory allocation failure
     }
     // Step 4: BFS to assign IDs
-    q_enqueue(&q, g_root, 0);
-    mappings[mapping_size].node = g_root;
-    mappings[mapping_size].id = 0;
+    q_enqueue(&q, g_root, 0);// Enqueue root
+    mappings[mapping_size].node = g_root;// Map root to ID 0
+    mappings[mapping_size].id = 0;// ID 0
     mapping_size++;
-    while(!q_empty(&q)) {
+    while(!q_empty(&q)) {// While queue not empty
         Node *current;
         int current_id;
-        q_dequeue(&q, &current, &current_id);
+        q_dequeue(&q, &current, &current_id);// Dequeue node
         // Yes child
         if(current->yes != NULL) {
-            if(mapping_size >= mapping_capacity) {
-                mapping_capacity *= 2;
-                mappings = (NodeMapping*)realloc(mappings, mapping_capacity * sizeof(NodeMapping));
+            if(mapping_size >= mapping_capacity) {// Resize mapping array
+                mapping_capacity *= 2;// Double capacity because we need more space
+                mappings = (NodeMapping*)realloc(mappings, mapping_capacity * sizeof(NodeMapping));// Reallocate
                 if(mappings == NULL) {
                     q_free(&q);
                     fclose(file);
                     return 0; // Memory allocation failure
                 }
             }
-            mappings[mapping_size].node = current->yes;
-            mappings[mapping_size].id = mapping_size;
-            q_enqueue(&q, current->yes, mapping_size);
-            mapping_size++;
+            mappings[mapping_size].node = current->yes;// Map yes child
+            mappings[mapping_size].id = mapping_size;// Assign new ID
+            q_enqueue(&q, current->yes, mapping_size);// Enqueue yes child
+            mapping_size++;// Increment size
         }
         // No child
         if(current->no != NULL) {
-            if(mapping_size >= mapping_capacity) {
-                mapping_capacity *= 2;
+            if(mapping_size >= mapping_capacity) {// Resize mapping array
+                mapping_capacity *= 2;// Double capacity
                 mappings = (NodeMapping*)realloc(mappings, mapping_capacity * sizeof(NodeMapping));
                 if(mappings == NULL) {
                     q_free(&q);
@@ -106,9 +108,9 @@ int save_tree(const char *filename) {
                     return 0; // Memory allocation failure
                 }
             }
-            mappings[mapping_size].node = current->no;
-            mappings[mapping_size].id = mapping_size;
-            q_enqueue(&q, current->no, mapping_size);
+            mappings[mapping_size].node = current->no;// Map no child// Assign new ID
+            mappings[mapping_size].id = mapping_size;// Assign new ID
+            q_enqueue(&q, current->no, mapping_size);// Enqueue no child
             mapping_size++;
         }
     }
@@ -117,11 +119,11 @@ int save_tree(const char *filename) {
     uint32_t magic = MAGIC;
     uint32_t version = VERSION;
     uint32_t nodeCount = mapping_size;
-    fwrite(&magic, sizeof(uint32_t), 1, file);
+    fwrite(&magic, sizeof(uint32_t), 1, file);// Write magic number to file 
     fwrite(&version, sizeof(uint32_t), 1, file);
     fwrite(&nodeCount, sizeof(uint32_t), 1, file);
     // Step 6: Write nodes
-    for(int i = 0; i < mapping_size; i++) {
+    for(int i = 0; i < mapping_size; i++) {// For each mapped node
         Node *node = mappings[i].node;
         uint8_t isQuestion = (uint8_t)(node->isQuestion);
         uint32_t textLen = (uint32_t)strlen(node->text);
@@ -132,14 +134,14 @@ int save_tree(const char *filename) {
         int32_t yesId = -1;
         int32_t noId = -1;
         for(int j = 0; j < mapping_size; j++) {
-            if(mappings[j].node == node->yes) {
+            if(mappings[j].node == node->yes) {// Find yesId
                 yesId = mappings[j].id;
             }
-            if(mappings[j].node == node->no) {
+            if(mappings[j].node == node->no) {// Find noId
                 noId = mappings[j].id;
             }
         }
-        fwrite(&yesId, sizeof(int32_t), 1, file);
+        fwrite(&yesId, sizeof(int32_t), 1, file);// Write yesId
         fwrite(&noId, sizeof(int32_t), 1, file);
     }
     // Clean up
@@ -178,6 +180,12 @@ int save_tree(const char *filename) {
  * - If any read fails or validation fails, goto load_error
  * - In load_error: free all allocated memory and return 0
  */
+//Read and validate file header
+//allocate memory for node arrays and yes/no ID arrays
+//read each node's data and create Node structures
+//link nodes based on stored yes/no IDs
+//set g_root to the reconstructed tree
+//clean up and return success/failure
 int load_tree(const char *filename) {
     // TODO: Implement this function
     // This is the most complex function in the lab
@@ -210,7 +218,7 @@ int load_tree(const char *filename) {
         return 0; // Memory allocation failure
     }
     // Step 4: Read each node
-    for(uint32_t i = 0; i < nodeCount; i++) {
+    for(uint32_t i = 0; i < nodeCount; i++) {// For each node
         uint8_t isQuestion;
         uint32_t textLen;
         if(fread(&isQuestion, sizeof(uint8_t), 1, file) != 1 ||

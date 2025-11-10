@@ -228,18 +228,18 @@ int main() {
             case 'q':
                 running = 0;
                 break;
-            case 'f':{
-                char *input1 = get_input(10, 3, "Enter first animal name: ");
-                char *animal1 = strdup(input1);
-                char *input2 = get_input(11, 3, "Enter second animal name: ");
-                char *animal2 = strdup(input2);
+            case 'f':{//I added the first shortest path option here which can be accessed by pressing 'f' in the main menu
+                char *input1 = get_input(10, 3, "Enter first animal name: ");//receives input for first animal
+                char *animal1 = strdup(input1);//makes a copy of the input string
+                char *input2 = get_input(11, 3, "Enter second animal name: ");//receives input for second animal
+                char *animal2 = strdup(input2);//makes a copy of the input string
 
-                clear();
-                refresh();
+                clear();//clears the screen
+                refresh();//refreshes the screen
 
-                find_shortest_path(animal1, animal2);
-                getch();
-
+                find_shortest_path(animal1, animal2);//calls find_shortest_path function to find and display the shortest distinguishing path between the two animals
+                getch();//waits for user input before returning to main menu
+                //for memory management
                 free(animal1);
                 free(animal2);
                 break;

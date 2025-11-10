@@ -61,8 +61,8 @@ void play_game() {
     // Loop until stack empty or guess is correct
     // Handle question nodes and leaf nodes differently
     
-    FrameStack stack;
-    fs_init(&stack);
+    FrameStack stack;//stack for iterative traversal
+    fs_init(&stack);// initialize stack
     // push root frame and start iterative traversal
     fs_push(&stack, g_root, -1);
     Node *parent = NULL;
@@ -75,24 +75,26 @@ void play_game() {
         if(cur == NULL) continue;
 
         //Question node: ask the question and push the chosen child
+        //CASE 1 when current node is a question
         if(cur -> isQuestion){
             // Clear the previous question line
             mvprintw(4, 3, "%-70s", ""); // Clear the line with spaces
             refresh();
             
-            char prompt[256];
-            snprintf(prompt, sizeof(prompt), "%s (y/n): ", cur->text);
-            int ans = get_yes_no(4, 3, prompt);
+            char prompt[256];//buffer for prompt
+            snprintf(prompt, sizeof(prompt), "%s (y/n): ", cur->text);//prepare prompt
+            int ans = get_yes_no(4, 3, prompt);//get user answer
 
-            parent = cur;
-            parentAnswer = ans ? 1 : 0;
+            parent = cur;//update parent pointer
+            parentAnswer = ans ? 1 : 0;//update parent answer
 
             if(ans){
-                fs_push(&stack, cur->yes, 1);
+                fs_push(&stack, cur->yes, 1);//push yes child
             } else {
-                fs_push(&stack, cur->no, 0);
+                fs_push(&stack, cur->no, 0);//push no child
             }
         }
+        //CASE 2: the current node is a leaf (animal)
         else{
             //leaf node: make a guess
             // Clear the previous line first
@@ -109,7 +111,7 @@ void play_game() {
                 break;
             }
 
-            // Get new animal and distinguishing question
+            // Get new animal and distinguishing question this is the learning phase
             mvprintw(6, 3, "%-70s", "");  // Clear any previous input
             mvprintw(7, 3, "%-70s", "");
             mvprintw(8, 3, "%-70s", "");
@@ -118,6 +120,7 @@ void play_game() {
             // Get input and make copies since get_input uses a static buffer
             char *newAnimal = strdup(get_input(6, 3, "I give up! What animal were you thinking of? "));
             char *newQuestion = strdup(get_input(7, 3, "Please provide a question that distinguishes your animal: "));
+            //I wanted to use the below lines but it was causing issues in the terminal so I used strdup above
             //char *newAnimal = get_input(6, 3, "I give up! What animal were you thinking of? ");
             //char *newQuestion = get_input(7, 3, "Please provide a question that distinguishes your animal: ");
             int newAnswer = get_yes_no(8, 3, "For your animal, what is the answer to that question? (y/n): ");
@@ -190,14 +193,14 @@ void play_game() {
             es_clear(&g_redo);
 
             //Update index
-            char *key = canonicalize(newQuestion);
+            char *key = canonicalize(newQuestion);//canonicalize question for indexing
             if(key){
                 h_put(&g_index, key, count_nodes(g_root) - 1); //assuming new animal is the last node added
                 free(key);
             }
 
             // Save the updated tree to file and make sure it's written to disk
-            FILE *fp = fopen("animals.dat.tmp", "wb");
+            FILE *fp = fopen("animals.dat.tmp", "wb");//open temp file
             if(fp != NULL) {
                 fclose(fp);
                 if(save_tree("animals.dat.tmp") && rename("animals.dat.tmp", "animals.dat") == 0) {
@@ -234,6 +237,8 @@ void play_game() {
  * 
  * Note: We don't free newQuestion/newLeaf because they might be redone
  */
+//pops the most recent Edit record from g_undo and reverts the tree to its previous state
+//the popped Edit is then pushed onto g_redo for potential redo
 int undo_last_edit() {
     if(es_empty(&g_undo)) {
         return 0; // Nothing to undo
@@ -269,6 +274,8 @@ int undo_last_edit() {
  * 4. Push edit back to g_undo stack
  * 5. Return 1
  */
+//pops an Edit from g_redo and reapplies the structural change to the tree
+//the re-applied Edit is then pushed back onto g_undo for potential undo
 int redo_last_edit() {
     if(es_empty(&g_redo)) {
         return 0; // Nothing to redo
