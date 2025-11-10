@@ -1,0 +1,100 @@
+# ECE 312 - Lab 5 Write-Up
+
+**Name:** Ohkyo Kwon  
+**EID:** okk2769      
+**Date:** 11/08/2025
+
+---
+
+## 1. Design Decisions (3-4 sentences)
+
+Briefly describe your key design choices and rationale:
+
+- **Data structure implementations:** How did you approach the stack/queue/hash table? Any specific design trade-offs?
+- i implemented stacks as dynamic arrays that start at a small capacity, 16 bytes, and double the capacity when it's full. By doubling the array only when it's full gives me a simple code with low reallocaiton overhead; it trades a bit of memory for speed and simplicity because it keeps the time complexity as low as to O(1). The BFS queue is a small linked-list queue so it never needs expensive reallocations during traversal. The hash table uses separate chaining with canonicalized keys and small dynamic arrays of ids per entry to index question and animal mappings. This keeps insertion and lookup simple and performant for expected calssroom-size trees. 
+
+- **Game loop strategy:** How did you structure the iterative traversal? What was your approach to the learning phase?
+- The interactive play loop is iterative instead of being recursive to track traversal state and make undo/redo easier. When the program learns a new animal it replaces a leaf with a question node and two leaf nodes, and records the change on the EditStack so undo/redo are straightforward. Persistence, integrity checks, and some utility functions use BFS with the queue structure so tree operations are predictable and easy to test. 
+- game loop strategy can be broken down into two main phases: traversal and learning phase. 
+Game Loop(playing phase): uses an iterative approach with FrameStack instead of recursio nto keep track of current node in traversal, whether the user took yes or no path to get there, and the parent node for adding new questions later. If current node is a question it displays a question to user, receives yes or no response and push the state to stack. 
+
+
+- **Memory management:** What strategy did you use to avoid leaks? Any particular challenges?
+- all strings are heap-allocated with strdup() and freed with free() in free-tree() to avoid dangling pointers. Every node allocation using malloc() is paired with a corresponding free() in destroy_tree() and clear_hash(). I also used valgrind-test repeatedly to check if there were any memory leaks before I began the next TODOs. The most challenging aspect was ensuring the freeing linked structures did not double-free or leak memory during Undo and Redo stages. 
+
+---
+
+## 2. Complexity Analysis (3-4 sentences)
+
+Provide Big-O analysis for the following operations. Include brief justification:
+
+- **Game traversal** (from root to leaf): 
+- The traversal during gameplay visits one node perquestion or animal along a single path so the time complexity should be O(h) when h is the height of the binary tree. It logically takes O(h) to reach the leaf when it traverses from the root to the very end of the leaf. So the worst case where the tree is unbalanced, it become O(n), but typically it takes less time because the tree grows by one question per learning iteration.
+
+- **save_tree():** 
+- The save-tree() funciton iteratively via BFS visits every node exactly once to order the decision tree into a binary file. Each node's data is written sequentially using file I/O operations of constant time per node which is O(n) in time complexity. This function, save_tree() is a complete traversal of the decision tree structure and takes O(n).
+
+- **Hash table put() in worst case:** 
+- In the worst case when all the keys hash to the same bucket, insertion requires searching through an entire linked list in the bucket. Thus, the worst-case complexity is O(n) though the average case is O(1) when hash distribution is ideal. The ideal hash function should be distributed equally likely while processing fast, but in the worst case where insertions map to the same bucket, it takes the time complexity O(n).
+
+- **undo_last_edit():**
+- undo_last_edit funciton restores the decision tree to its previous state by popping the most recent stack from the undo stack. It stores direct pointers to the affected parent node, its child linkage type, and the replace leaf node. Undoing involves simply the stack operations like push and pop which have the constant-time complexity of O(1). This function does not require any traversal or search through the tree.
+
+
+---
+
+## 3. Testing & Debugging (2-3 sentences)
+
+Describe your testing process and any major bugs you encountered:
+
+- **Testing approach:** What was your strategy beyond running `make test`?
+What I first did was to be familiar with the core data structures declared in the header file such as FrameStack, Queue, Hash, EditStack etc. By doing so, I was able to make less errors with data types which made passing make test somewhat easier. I used 'make test' and 'make valgrind-test' very often, almost after completing each TODO, to verify that my code did not produce any memory leaks nor failure in the 'make test'. I used valgrind to detect memory issues and every heap allocation was properly freed. And IT DID!
+
+- **Most difficult bug:** What was the hardest bug to find/fix and how did you solve it?
+- The hardeset bug I encounted was probably the use of strdup() which produces the double-free and invalid read errors. I had to double check if that I did not carry any double frees. When it comes to what was the hardest TODO to complete, implementing the find_shortest_path(), which is the function displaying the shortest distinguishing path question, was the most challenging part of the lab. Initially, my code produced incorrect or partial paths because both animal nodes were being located correctly, but their parent relationships were not being maintained properly. This caused backtracking to fail while reconstructing the path to the root and finding the lowest common ancestor. I fixed this error by storing each node's parent pointer and the direction which made reversing the sequences possible. 
+
+---
+
+## 4. Implementation Challenges (2-3 sentences)
+
+Which TODOs were most challenging and why?
+
+1. **Hardest TODO:** 
+- As I said earlier the most challenging task was implementing find_shortest_path which required combining BFS with parent pointer reconstruction to locate both target animals and their lowest common ancestor. Managing the dynamically allocated queue and path arrays while preventing memory leaks was complicated and I had to keep a track of what I had memory allocated. To be frank, it was initially difficult to come up with a systematic algorithm logic that implements this TODO, which would have been impossible without the help of AI. I initially could not think of the algorithm logic that can track the parent's pointers to find the lowest common ancestor through reconstructing the path to the root.
+
+2. **Most time-consuming:** 
+- implementing and debugging TODO31 play_game() was the most time-consuming task in the entire project. It combined several non-trivial challenges such as iterative stack-based traversal, dynamic memory allocation for new question and animal nodes and updating the tree correctly while inserting new branches. Getting the 'learning' phase right required multiple revisions too because my earlier code lost parent links and failed to save the tree properly. Testing valgrind errors within this error was also quite painful but after numbers of test cycles it became stable and memory-safe!
+
+3. **Most interesting:** 
+- I would say the most interesting and intriguing TODO was also building find-shortest-path() because desinging the DFS traversal and backtracking mechanism was cool. the backtracking mechanism that reconstructs each animal's path to the root was initially difficult to visualize but was interesting to see how it actually works. I think this task combined many interesting algorithmic reasoning with data structure design such as blending tree traversal, queue management, and path reconstruction. 
+
+---
+
+## 5. Time Spent
+
+Provide approximate hours for each phase:
+
+- Phase 1 (Data Structures): 10 hours
+- Phase 2 (Game Logic): 20 hours  
+- Phase 3 (Persistence): 4 hours
+- Testing/Debugging: 20 hours
+- **Total:** 54 hours
+
+---
+
+## 6. Reflection (1-2 sentences)
+
+What was the most valuable lesson from this lab?
+- The most valuable lesson from this lab was learning how to design and debug a large, practical, interconnected C programs where every module depends on correct memory management. Also, this lab helped me solidify my understanding of the abstract data types and algorithms such as BFS and tree reversal.
+
+---
+
+## Submission Checklist
+
+- [O] All 32 required TODOs implemented
+- [O]`make test` passes with no failures
+- [O] `make valgrind` shows no memory leaks
+- [O] Game fully functional (play, learn, undo, redo, save, load)
+- [O] Code compiles without warnings (`-Wall -Wextra`)
+- [O] This write-up completed
+- [O] Optional TODO 30 attempted? (Yes/No): Yes
